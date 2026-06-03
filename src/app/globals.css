@@ -148,54 +148,12 @@
   }
 }
 
-/* ── Haussmann pencil sketch animation ─────────────────
-   Strokes are fully visible by default (and under reduced motion);
-   the self-drawing + gliding pencil only run when motion is welcome. */
+/* ── Haussmann pencil sketch ───────────────────────────
+   Strokes are fully visible by default (and under reduced motion).
+   The self-drawing loop + gliding pencil are orchestrated in JS
+   (Web Animations API) and only run when motion is welcome. */
 .sketch .pencil {
   opacity: 0;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .sketch [data-draw] {
-    stroke-dasharray: 1;
-    stroke-dashoffset: 1;
-    animation: rs-draw 1s ease forwards;
-    animation-delay: var(--d, 0s);
-  }
-
-  .sketch .pencil {
-    animation: rs-pencil 3.4s ease-in-out forwards;
-  }
-
-  @keyframes rs-draw {
-    to {
-      stroke-dashoffset: 0;
-    }
-  }
-
-  @keyframes rs-pencil {
-    0% {
-      transform: translate(40px, 470px);
-      opacity: 0;
-    }
-    8% {
-      opacity: 1;
-    }
-    25% {
-      transform: translate(330px, 95px);
-    }
-    55% {
-      transform: translate(95px, 250px);
-    }
-    85% {
-      transform: translate(320px, 460px);
-      opacity: 1;
-    }
-    100% {
-      transform: translate(210px, 500px);
-      opacity: 0;
-    }
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
