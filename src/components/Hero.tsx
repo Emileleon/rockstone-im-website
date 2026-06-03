@@ -1,5 +1,5 @@
 import { site, whatsappUrl } from "@/lib/site";
-import { StreetSketch } from "./StreetSketch";
+import { SignatureFlourish } from "./SignatureFlourish";
 
 export function Hero() {
   return (
@@ -55,9 +55,9 @@ export function Hero() {
           </div>
         </div>
 
-        {/* Ink sketch: a Parisian street receding to the Eiffel Tower */}
-        <div className="relative mx-auto aspect-[3/4] w-full max-w-[24rem] lg:max-w-[26rem]">
-          <StreetSketch />
+        {/* Gold fountain pen signing an elegant flourish */}
+        <div className="relative mx-auto aspect-[12/5] w-full max-w-[30rem]">
+          <SignatureFlourish />
         </div>
       </div>
     </section>
