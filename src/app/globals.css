@@ -148,6 +148,45 @@
   }
 }
 
+/* ── Ink-reveal for a supplied illustration ────────────
+   The artwork is revealed left→right like fresh ink, a nib rides the
+   reveal front, then a pause and a soft fade before it loops.
+   Fully visible (no nib) under reduced motion. */
+.ink-reveal-img {
+  clip-path: inset(0 0 0 0);
+}
+.ink-nib {
+  position: absolute;
+  top: 44%;
+  left: 0;
+  opacity: 0;
+  color: var(--color-gold);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ink-reveal-img {
+    animation: ink-clip 7.5s ease-in-out infinite;
+  }
+  .ink-nib {
+    animation: ink-nib 7.5s ease-in-out infinite;
+  }
+  @keyframes ink-clip {
+    0% { clip-path: inset(0 100% 0 0); opacity: 0; }
+    6% { opacity: 1; }
+    52% { clip-path: inset(0 0 0 0); opacity: 1; }
+    80% { clip-path: inset(0 0 0 0); opacity: 1; }
+    100% { clip-path: inset(0 0 0 0); opacity: 0; }
+  }
+  @keyframes ink-nib {
+    0% { left: 0%; opacity: 0; }
+    6% { opacity: 1; }
+    52% { left: 100%; opacity: 1; }
+    58% { opacity: 0; }
+    100% { opacity: 0; }
+  }
+}
+
 /* ── Haussmann pencil sketch ───────────────────────────
    Strokes are fully visible by default (and under reduced motion).
    The self-drawing loop + gliding pencil are orchestrated in JS
