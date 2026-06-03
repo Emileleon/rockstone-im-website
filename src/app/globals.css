@@ -1,0 +1,165 @@
+@import "tailwindcss";
+
+/* Enable class-based dark variant driven by the .light/.dark theme class. */
+@custom-variant light (&:where(.light, .light *));
+
+/*
+  ROCKSTONE IM — Design tokens
+  Source of truth: charte graphique (v2, jour + nuit).
+  Aesthetic: luxe obsidian/ivoire + or. Two themes: dark (default) & light.
+
+  Semantic tokens (canvas/surface/card/line/ink/muted/faint) switch per theme.
+  Gold and state pastels are shared, tuned for contrast where needed.
+*/
+@theme {
+  /* Gold accent — constant across themes */
+  --color-gold: #c9a96e;
+  --color-gold-light: #e2c99a;
+  --color-gold-dark: #a07c45;
+  --color-gold-deep: #7a5c28;
+
+  /* Fixed anchors — for text sitting on gold, regardless of theme */
+  --color-obsidian: #0d0d0d;
+  --color-ivory: #f5f2ec;
+
+  /* Semantic, theme-aware (values defined under :root / .light below) */
+  --color-canvas: var(--ds-canvas);
+  --color-surface: var(--ds-surface);
+  --color-card: var(--ds-card);
+  --color-card-alt: var(--ds-card-alt);
+  --color-line: var(--ds-line);
+  --color-ink: var(--ds-ink);
+  --color-muted: var(--ds-muted);
+  --color-faint: var(--ds-faint);
+
+  /* State pastels (theme-aware soft bg + readable fg) */
+  --color-success: var(--ds-success);
+  --color-success-soft: var(--ds-success-soft);
+  --color-danger: var(--ds-danger);
+  --color-danger-soft: var(--ds-danger-soft);
+  --color-warning: var(--ds-warning);
+  --color-warning-soft: var(--ds-warning-soft);
+
+  /* Typography — driven by next/font variables */
+  --font-display: var(--font-cormorant), "Cormorant Garamond", serif;
+  --font-body: var(--font-dm-sans), "DM Sans", system-ui, sans-serif;
+  --font-numbers: var(--font-bebas), "Bebas Neue", sans-serif;
+
+  /* Radii (charte: subtle) */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* Elevation */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* ── Dark theme (default) ───────────────────────────── */
+:root,
+.dark {
+  --ds-canvas: #0d0d0d;
+  --ds-surface: #161616;
+  --ds-card: #1c1c1e;
+  --ds-card-alt: #242426;
+  --ds-line: #2c2c2e;
+  --ds-ink: #e8e4dc;
+  --ds-muted: #8a8a8e;
+  --ds-faint: #48484c;
+
+  --ds-success: #c8f0da;
+  --ds-success-soft: rgba(46, 125, 82, 0.18);
+  --ds-danger: #ffd6d3;
+  --ds-danger-soft: rgba(180, 50, 40, 0.2);
+  --ds-warning: #fff0c2;
+  --ds-warning-soft: rgba(122, 92, 40, 0.22);
+
+  color-scheme: dark;
+}
+
+/* ── Light theme ────────────────────────────────────── */
+.light {
+  --ds-canvas: #f5f0e8;
+  --ds-surface: #ede8de;
+  --ds-card: #fdfaf4;
+  --ds-card-alt: #f0ebe0;
+  --ds-line: #e2ddd3;
+  --ds-ink: #1a1a1a;
+  --ds-muted: #7a7570;
+  --ds-faint: #c0bab0;
+
+  --ds-success: #1b5e38;
+  --ds-success-soft: #c8f0da;
+  --ds-danger: #8b1a14;
+  --ds-danger-soft: #ffd6d3;
+  --ds-warning: #7a5500;
+  --ds-warning-soft: #fff0c2;
+
+  color-scheme: light;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.6;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Visible focus for keyboard users (a11y) */
+  :focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: rgba(201, 169, 110, 0.25);
+    color: var(--color-ink);
+  }
+}
+
+@layer utilities {
+  /* Hairline gold rule used across sections */
+  .rule-gold {
+    background: linear-gradient(90deg, transparent, var(--color-gold), transparent);
+  }
+
+  /* Eyebrow / kicker label */
+  .eyebrow {
+    font-size: 0.6875rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--color-gold);
+  }
+
+  /* Tabular figures for stats */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  body {
+    transition: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
