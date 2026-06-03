@@ -1,5 +1,5 @@
 import { site, whatsappUrl } from "@/lib/site";
-import { EiffelLine } from "./EiffelLine";
+import { StreetSketch } from "./StreetSketch";
 
 export function Hero() {
   return (
@@ -55,9 +55,9 @@ export function Hero() {
           </div>
         </div>
 
-        {/* Restrained line study of the Eiffel Tower */}
-        <div className="relative mx-auto h-[28rem] w-full max-w-[22rem] sm:h-[34rem] lg:h-[38rem]">
-          <EiffelLine />
+        {/* Ink sketch: a Parisian street receding to the Eiffel Tower */}
+        <div className="relative mx-auto aspect-[3/4] w-full max-w-[24rem] lg:max-w-[26rem]">
+          <StreetSketch />
         </div>
       </div>
     </section>
