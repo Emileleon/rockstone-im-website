@@ -9,7 +9,7 @@ negocio:
   horario: "Du lundi au vendredi, 9h – 18h"
 
 agente:
-  nombre: "Rocky"
+  nombre: "Louise"
   tono: "professionnel et haut de gamme"
   casos_de_uso:
     - "Répondre aux questions fréquentes (biens, gestion locative, services)"
