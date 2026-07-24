@@ -1,0 +1,28 @@
+# Secrets — NE JAMAIS commiter
+.env
+
+# Base de données locale
+*.db
+*.sqlite
+*.sqlite3
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Knowledge (fichiers privés de l'entreprise)
+knowledge/*
+!knowledge/.gitkeep
+
+# État de session
+config/session.yaml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
