@@ -2,13 +2,16 @@
 # Généré par AgentKit — profil : ROCKSTONE IM (immobilier)
 
 """
-Outils spécifiques au métier de ROCKSTONE IM.
-Ces fonctions étendent les capacités de l'agent au-delà de la simple réponse texte.
-Cas d'usage retenus : FAQ, qualification de leads, prise de rendez-vous de visite.
+Outils spécifiques aux deux métiers de ROCKSTONE IM :
+  - GESTION IMMOBILIÈRE (cœur de métier) : demandes de mandat de gestion des
+    propriétaires/investisseurs et demandes des locataires des biens gérés.
+  - TRANSACTION : achat, vente et location (qualification + visites).
 
-NOTE : ces fonctions sont des points d'extension. Les stubs de qualification de
-leads et de rendez-vous journalisent la demande et retournent une confirmation ;
-à brancher sur votre CRM / agenda réel (HubSpot, Calendly, Google Calendar, etc.).
+Ces fonctions étendent les capacités de l'agent au-delà de la simple réponse texte.
+
+NOTE : ce sont des points d'extension. Les stubs journalisent la demande et
+retournent une confirmation ; à brancher sur votre CRM / agenda réel
+(HubSpot, Calendly, Google Calendar, etc.).
 """
 
 import os
@@ -68,24 +71,77 @@ def buscar_en_knowledge(consulta: str) -> str:
 
 
 # ════════════════════════════════════════════════════════════
-# Outils métier — ROCKSTONE IM (immobilier)
+# Outils métier — ROCKSTONE IM
+# Deux métiers DISTINCTS : la gestion immobilière (cœur de métier)
+# et la transaction (vente / location). Les outils sont séparés
+# en conséquence. À brancher sur votre CRM / agenda réels.
 # ════════════════════════════════════════════════════════════
 
-def registrar_lead(telefono: str, nombre: str, interes: str) -> str:
+# ── Métier 1 : GESTION IMMOBILIÈRE (cœur de métier) ──────────
+
+def registrar_demande_gestion(telefono: str, nombre: str, bien: str, situation: str = "") -> str:
     """
-    Enregistre un prospect (acheteur, locataire ou investisseur).
+    Enregistre une demande de mandat de GESTION d'un propriétaire ou investisseur
+    qui souhaite confier son patrimoine à ROCKSTONE IM.
+
+    Args:
+        telefono: Numéro WhatsApp du client
+        nombre: Nom du propriétaire / investisseur
+        bien: Nature et localisation du bien à gérer
+        situation: Situation locative actuelle (loué, vacant, en travaux…)
+
+    Returns:
+        Message de confirmation
+    """
+    logger.info(f"[GESTION] {nombre} ({telefono}) — bien : {bien} — situation : {situation}")
+    return (
+        f"Merci {nombre}, votre demande de gestion est bien enregistrée. "
+        "Un interlocuteur dédié ROCKSTONE IM vous recontacte rapidement pour étudier "
+        "la gestion de votre patrimoine."
+    )
+
+
+def registrar_demande_locataire(telefono: str, referencia_bien: str, demande: str) -> str:
+    """
+    Enregistre la demande d'un LOCATAIRE d'un bien géré par ROCKSTONE IM
+    (question, incident, entretien, travaux) et la transmet à l'interlocuteur dédié.
+
+    Args:
+        telefono: Numéro WhatsApp du locataire
+        referencia_bien: Référence ou adresse du bien géré
+        demande: Description de la demande
+
+    Returns:
+        Message de confirmation
+    """
+    logger.info(f"[LOCATAIRE] {telefono} — bien {referencia_bien} — demande : {demande}")
+    return (
+        "Votre demande est bien prise en compte et transmise à votre interlocuteur "
+        "dédié ROCKSTONE IM, qui revient vers vous dans les meilleurs délais."
+    )
+
+
+# ── Métier 2 : TRANSACTION (vente / location) ────────────────
+
+def registrar_lead_transaction(telefono: str, nombre: str, operacion: str, criterios: str) -> str:
+    """
+    Enregistre un prospect de TRANSACTION : achat, vente, ou (mise en) location.
     À brancher sur votre CRM. Pour l'instant, journalise et confirme.
 
     Args:
         telefono: Numéro WhatsApp du prospect
         nombre: Nom du prospect
-        interes: Type de bien / budget / secteur recherché
+        operacion: Type d'opération ("achat", "vente", "location_locataire", "location_bailleur")
+        criterios: Type de bien / budget / secteur / caractéristiques
 
     Returns:
         Message de confirmation
     """
-    logger.info(f"[LEAD] {nombre} ({telefono}) — intérêt : {interes}")
-    return f"Merci {nombre}, votre demande a bien été enregistrée. Un conseiller ROCKSTONE IM vous recontactera rapidement."
+    logger.info(f"[TRANSACTION:{operacion}] {nombre} ({telefono}) — critères : {criterios}")
+    return (
+        f"Merci {nombre}, votre projet ({operacion}) est bien enregistré. "
+        "Un conseiller transaction ROCKSTONE IM vous recontacte rapidement."
+    )
 
 
 def agendar_visita(telefono: str, referencia_bien: str, fecha: str, hora: str) -> dict:
@@ -112,10 +168,13 @@ def agendar_visita(telefono: str, referencia_bien: str, fecha: str, hora: str) -
     }
 
 
-def escalar_a_asesor(telefono: str, contexto: str) -> str:
+# ── Commun aux deux métiers ──────────────────────────────────
+
+def escalar_a_interlocutor_dedicado(telefono: str, contexto: str) -> str:
     """
-    Transfère la conversation à un conseiller humain lorsque la demande
-    dépasse le périmètre de l'agent (négociation, dossier juridique, litige).
+    Transfère la conversation à l'interlocuteur dédié / un conseiller humain lorsque
+    la demande dépasse le périmètre de l'agent (négociation, dossier juridique, litige,
+    situation sensible), quel que soit le métier concerné.
 
     Args:
         telefono: Numéro WhatsApp du client
@@ -125,4 +184,4 @@ def escalar_a_asesor(telefono: str, contexto: str) -> str:
         Message de transfert
     """
     logger.info(f"[ESCALADE] {telefono} — contexte : {contexto}")
-    return "Je transmets votre demande à un conseiller ROCKSTONE IM qui prendra le relais dans les meilleurs délais."
+    return "Je transmets votre demande à votre interlocuteur dédié ROCKSTONE IM, qui prendra le relais dans les meilleurs délais."

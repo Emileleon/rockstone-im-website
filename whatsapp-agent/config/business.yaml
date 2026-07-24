@@ -2,21 +2,43 @@
 negocio:
   nombre: "ROCKSTONE IM"
   descripcion: >
-    ROCKSTONE IM est une société de gestion et d'investissement immobilier.
-    Elle accompagne propriétaires, investisseurs et locataires : gestion locative,
-    conseil en investissement, recherche et vente de biens, suivi des relations
-    locataires / propriétaires / fournisseurs.
+    ROCKSTONE IM est un cabinet de gestion immobilière. Sa mission principale est de
+    gérer le patrimoine immobilier de ses clients comme s'il s'agissait du sien.
+    En complément de la gestion, le cabinet accompagne également les opérations de
+    transaction (vente et location).
+  mision: "Gérer le patrimoine immobilier de nos clients comme si c'était le nôtre."
+  valores:
+    - "Une relation humaine, proche et de confiance"
+    - "Un interlocuteur dédié pour chaque client"
+    - "Une équipe de professionnels réactive et efficace"
+    - "Des outils digitalisés au service du suivi et de la transparence"
   horario: "Du lundi au vendredi, 9h – 18h"
+
+# Les deux métiers de ROCKSTONE IM, clairement distincts
+servicios:
+  gestion_inmobiliaria:
+    etiqueta: "Gestion immobilière (cœur de métier)"
+    descripcion: >
+      Gestion locative et administrative du patrimoine des propriétaires et
+      investisseurs : recherche et sélection de locataires, baux et états des lieux,
+      quittances et encaissement des loyers, suivi des charges et de la comptabilité,
+      relation avec les locataires et les fournisseurs, entretien et travaux,
+      reporting régulier via nos outils digitalisés.
+  transaccion:
+    etiqueta: "Transaction (vente et location)"
+    descripcion: >
+      Vente et mise en location de biens : estimation, mise en marché, organisation
+      des visites, négociation et accompagnement jusqu'à la signature.
 
 agente:
   nombre: "Louise"
   tono: "professionnel et haut de gamme"
   casos_de_uso:
-    - "Répondre aux questions fréquentes (biens, gestion locative, services)"
-    - "Qualifier les prospects (acheteurs, locataires, investisseurs)"
-    - "Prendre des rendez-vous de visite de biens"
-    - "Orienter vers un conseiller humain si nécessaire"
+    - "Identifier la nature de la demande : gestion immobilière ou transaction (vente / location)"
+    - "Gestion : renseigner propriétaires et investisseurs, recueillir les demandes de mandat de gestion"
+    - "Transaction : qualifier acheteurs, locataires et vendeurs, organiser des visites"
+    - "Orienter rapidement vers l'interlocuteur dédié"
 
 metadata:
   creado: "2026-07-24"
-  version: "1.0"
+  version: "1.1"
