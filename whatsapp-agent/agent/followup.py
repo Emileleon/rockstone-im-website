@@ -2,21 +2,24 @@
 # Généré par AgentKit
 
 """
-Planificateur de relances : si un prospect ne répond plus, Louise le relance
-une première fois après ~30 min, puis une seconde fois le lendemain.
+Planificateur de relances. Si un prospect ne répond plus, Louise le relance selon
+une escalade de délais successifs (par défaut : 5 min, puis 30 min, puis 2 h, puis 5 h).
+
+Fenêtre horaire : toute relance qui tomberait en dehors de la plage [9h, 20h[
+(heure locale, Europe/Paris par défaut) est décalée au lendemain à 9h — pour ne pas
+déranger le prospect le soir ou la nuit.
 
 IMPORTANT — Fenêtre de 24 h WhatsApp :
   Meta Cloud API et Twilio n'autorisent l'envoi de messages libres que dans les
-  24 h suivant le dernier message du prospect. La relance à 30 min passe sans
-  problème ; la relance « du lendemain » peut tomber HORS de cette fenêtre — en
-  production elle nécessite alors un TEMPLATE pré-approuvé par le fournisseur.
-  Ici, l'envoi est tenté tel quel : s'il échoue (hors fenêtre), c'est journalisé.
+  24 h suivant le dernier message du prospect. Les premières relances passent ; une
+  relance décalée au lendemain peut tomber HORS de cette fenêtre — en production elle
+  nécessite alors un TEMPLATE pré-approuvé. Si l'envoi échoue, c'est journalisé.
 """
 
 import os
 import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from agent.memory import (
     guardar_mensaje,
@@ -29,20 +32,55 @@ from agent.brain import generar_relance
 
 logger = logging.getLogger("agentkit")
 
-# Cadence configurable via .env
-RELANCE_1_MINUTES = int(os.getenv("RELANCE_1_MINUTES", "30"))     # 1ère relance
-RELANCE_2_HORAS = int(os.getenv("RELANCE_2_HORAS", "24"))         # 2ème relance (lendemain)
-MAX_RELANCES = int(os.getenv("MAX_RELANCES", "2"))               # nb total de relances
-INTERVALO_SEGUNDOS = int(os.getenv("SEGUIMIENTO_INTERVALO_SEGUNDOS", "60"))  # fréquence du scan
+
+def _parse_delais() -> list[timedelta]:
+    """Délais successifs entre relances (en minutes) depuis .env, sinon défaut."""
+    raw = os.getenv("RELANCE_DELAIS_MINUTES", "5,30,120,300")
+    delais = [timedelta(minutes=float(p)) for p in raw.split(",") if p.strip()]
+    return delais or [timedelta(minutes=5)]
 
 
-def calcular_proxima(etapa: int, ahora: datetime) -> datetime | None:
-    """Échéance de la relance à venir selon l'étape déjà atteinte."""
-    if etapa == 0:
-        return ahora + timedelta(minutes=RELANCE_1_MINUTES)
-    if etapa == 1:
-        return ahora + timedelta(hours=RELANCE_2_HORAS)
-    return None
+DELAIS = _parse_delais()
+MAX_RELANCES = len(DELAIS)
+
+# Fenêtre horaire d'envoi (heure locale)
+HEURE_DEBUT = int(os.getenv("RELANCE_HEURE_DEBUT", "9"))
+HEURE_FIN = int(os.getenv("RELANCE_HEURE_FIN", "20"))
+INTERVALO_SEGUNDOS = int(os.getenv("SEGUIMIENTO_INTERVALO_SEGUNDOS", "60"))
+
+_TZNAME = os.getenv("RELANCE_TIMEZONE", "Europe/Paris")
+try:
+    from zoneinfo import ZoneInfo
+    _TZ = ZoneInfo(_TZNAME)
+except Exception as e:  # tzdata absent : on n'applique pas la fenêtre horaire
+    logger.warning(f"Fuseau '{_TZNAME}' indisponible ({e}) — fenêtre horaire désactivée")
+    _TZ = None
+
+
+def _aplicar_horario(candidato: datetime) -> datetime:
+    """
+    Décale un horaire (UTC naïf) hors de la plage [HEURE_DEBUT, HEURE_FIN[ vers
+    la prochaine ouverture à HEURE_DEBUT (heure locale). Retourne un UTC naïf.
+    """
+    if _TZ is None:
+        return candidato
+    local = candidato.replace(tzinfo=timezone.utc).astimezone(_TZ)
+    if local.hour >= HEURE_FIN:
+        local = (local + timedelta(days=1)).replace(
+            hour=HEURE_DEBUT, minute=0, second=0, microsecond=0)
+    elif local.hour < HEURE_DEBUT:
+        local = local.replace(hour=HEURE_DEBUT, minute=0, second=0, microsecond=0)
+    return local.astimezone(timezone.utc).replace(tzinfo=None)
+
+
+def proxima_relance(etapa: int, ahora: datetime) -> datetime | None:
+    """
+    Échéance de la prochaine relance selon le nombre de relances déjà envoyées.
+    Retourne None quand le nombre maximum de relances est atteint.
+    """
+    if etapa >= MAX_RELANCES:
+        return None
+    return _aplicar_horario(ahora + DELAIS[etapa])
 
 
 async def procesar_relances(proveedor, ahora: datetime):
@@ -64,8 +102,8 @@ async def procesar_relances(proveedor, ahora: datetime):
         await guardar_mensaje(telefono, "assistant", mensaje)
 
         nueva_etapa = etapa + 1
-        proxima = calcular_proxima(nueva_etapa, ahora)
-        if proxima is None or nueva_etapa >= MAX_RELANCES:
+        proxima = proxima_relance(nueva_etapa, ahora)
+        if proxima is None:
             await avanzar_seguimiento(telefono, nueva_etapa, None, activo=False)
         else:
             await avanzar_seguimiento(telefono, nueva_etapa, proxima, activo=True)
@@ -74,9 +112,10 @@ async def procesar_relances(proveedor, ahora: datetime):
 
 async def loop_seguimiento(proveedor):
     """Boucle de fond : scanne les relances dues à intervalle régulier."""
+    minutos = ", ".join(str(int(d.total_seconds() // 60)) for d in DELAIS)
     logger.info(
-        f"Boucle de relances active (1ère : {RELANCE_1_MINUTES} min, "
-        f"2ème : +{RELANCE_2_HORAS} h, max {MAX_RELANCES})"
+        f"Boucle de relances active — délais (min) : {minutos} ; "
+        f"fenêtre {HEURE_DEBUT}h-{HEURE_FIN}h ({_TZNAME})"
     )
     while True:
         try:

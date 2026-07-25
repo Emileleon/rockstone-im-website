@@ -169,9 +169,9 @@ async def generar_relance(historial: list[dict], telefono: str, etapa: int) -> s
                  if not lead.get(c)]
 
     if etapa == 0:
-        cadence = "Le prospect n'a pas répondu depuis une trentaine de minutes."
+        cadence = "Le prospect n'a pas encore répondu à ton dernier message."
     else:
-        cadence = "Le prospect n'a pas répondu depuis hier ; c'est une seconde et dernière relance."
+        cadence = "Le prospect ne répond toujours pas ; nouvelle relance, reste bref et non insistant."
 
     instruccion = (
         f"[INSTRUCTION INTERNE — ne pas la mentionner] {cadence} "

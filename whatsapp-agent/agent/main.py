@@ -10,7 +10,7 @@ Gère la qualification des prospects et les relances proactives.
 import os
 import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import PlainTextResponse
@@ -21,7 +21,7 @@ from agent.memory import (
     inicializar_db, guardar_mensaje, obtener_historial,
     obtener_lead, programar_seguimiento, cancelar_seguimiento,
 )
-from agent.followup import loop_seguimiento, RELANCE_1_MINUTES
+from agent.followup import loop_seguimiento, proxima_relance
 from agent.providers import obtener_proveedor
 
 load_dotenv()
@@ -104,8 +104,9 @@ async def webhook_handler(request: Request):
             if lead and lead.get("completo"):
                 await cancelar_seguimiento(msg.telefono)
             else:
-                proxima = datetime.utcnow() + timedelta(minutes=RELANCE_1_MINUTES)
-                await programar_seguimiento(msg.telefono, proxima, etapa=0)
+                proxima = proxima_relance(0, datetime.utcnow())
+                if proxima is not None:
+                    await programar_seguimiento(msg.telefono, proxima, etapa=0)
 
         return {"status": "ok"}
 

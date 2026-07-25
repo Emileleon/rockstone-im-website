@@ -58,15 +58,17 @@ uvicorn agent.main:app --reload --port 8000
   enregistre au fil de l'eau ses données via l'outil `guardar_calificacion` →
   table `leads` (nom, gestion/transaction, opération, bien, budget, secteur, délai,
   objet détaillé). Un lead est marqué « complet » dès que l'essentiel est connu.
-- **Relances proactives** : si le prospect ne répond plus, Louise le relance après
-  `RELANCE_1_MINUTES` (30 min par défaut), puis après `RELANCE_2_HORAS` (le lendemain).
-  Chaque réponse du prospect réinitialise le compteur ; une qualification complète
-  arrête les relances. Réglages dans `.env`.
+- **Relances proactives** : si le prospect ne répond plus, Louise le relance selon
+  une escalade de délais successifs — par défaut **5 min → 30 min → 2 h → 5 h**
+  (`RELANCE_DELAIS_MINUTES`). Une relance qui tomberait hors de la plage
+  **9h–20h** (heure locale `RELANCE_TIMEZONE`, `RELANCE_HEURE_DEBUT`/`_FIN`) est
+  **décalée au lendemain à 9h**. Chaque réponse du prospect réinitialise le compteur ;
+  une qualification complète arrête les relances.
 
 > ⚠️ **Fenêtre 24 h WhatsApp** : Meta/Twilio n'autorisent l'envoi libre que dans les
-> 24 h suivant le dernier message du prospect. La relance à 30 min passe ; la relance
-> « du lendemain » peut tomber hors fenêtre → en production, elle nécessite un
-> **template pré-approuvé** par le fournisseur. Sinon l'envoi échoue (c'est journalisé).
+> 24 h suivant le dernier message du prospect. Les premières relances passent ; une
+> relance décalée au lendemain peut tomber hors fenêtre → en production, elle nécessite
+> un **template pré-approuvé** par le fournisseur. Sinon l'envoi échoue (c'est journalisé).
 
 ## Personnalisation
 
