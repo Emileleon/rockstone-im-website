@@ -4,17 +4,24 @@
 """
 Serveur principal de l'agent WhatsApp.
 Fonctionne avec n'importe quel fournisseur (Meta, Twilio) grâce à la couche providers.
+Gère la qualification des prospects et les relances proactives.
 """
 
 import os
+import asyncio
 import logging
+from datetime import datetime, timedelta
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import PlainTextResponse
 from dotenv import load_dotenv
 
 from agent.brain import generar_respuesta
-from agent.memory import inicializar_db, guardar_mensaje, obtener_historial
+from agent.memory import (
+    inicializar_db, guardar_mensaje, obtener_historial,
+    obtener_lead, programar_seguimiento, cancelar_seguimiento,
+)
+from agent.followup import loop_seguimiento, RELANCE_1_MINUTES
 from agent.providers import obtener_proveedor
 
 load_dotenv()
@@ -32,12 +39,16 @@ PORT = int(os.getenv("PORT", 8000))
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Initialise la base de données au démarrage du serveur."""
+    """Initialise la base de données et lance la boucle de relances."""
     await inicializar_db()
     logger.info("Base de données initialisée")
     logger.info(f"Serveur AgentKit démarré sur le port {PORT}")
     logger.info(f"Fournisseur WhatsApp : {proveedor.__class__.__name__}")
-    yield
+    tarea_relances = asyncio.create_task(loop_seguimiento(proveedor))
+    try:
+        yield
+    finally:
+        tarea_relances.cancel()
 
 
 app = FastAPI(
@@ -65,35 +76,36 @@ async def webhook_verificacion(request: Request):
 @app.post("/webhook")
 async def webhook_handler(request: Request):
     """
-    Reçoit les messages WhatsApp via le fournisseur configuré.
-    Traite le message, génère une réponse avec Claude et la renvoie.
+    Reçoit les messages WhatsApp, génère une réponse avec Claude, qualifie le
+    prospect et (re)planifie les relances.
     """
     try:
-        # Analyse du webhook — le fournisseur normalise le format
         mensajes = await proveedor.parsear_webhook(request)
 
         for msg in mensajes:
-            # Ignorer les messages propres ou vides
             if msg.es_propio or not msg.texto:
                 continue
 
             logger.info(f"Message de {msg.telefono} : {msg.texto}")
 
-            # Récupérer l'historique AVANT d'enregistrer le message actuel
-            # (brain.py ajoute le message actuel, évitant les doublons)
+            # Historique AVANT d'enregistrer le message courant (brain l'ajoute)
             historial = await obtener_historial(msg.telefono)
+            respuesta = await generar_respuesta(msg.texto, historial, msg.telefono)
 
-            # Générer la réponse avec Claude
-            respuesta = await generar_respuesta(msg.texto, historial)
-
-            # Enregistrer le message de l'utilisateur ET la réponse de l'agent
             await guardar_mensaje(msg.telefono, "user", msg.texto)
             await guardar_mensaje(msg.telefono, "assistant", respuesta)
 
-            # Envoyer la réponse par WhatsApp via le fournisseur
             await proveedor.enviar_mensaje(msg.telefono, respuesta)
-
             logger.info(f"Réponse à {msg.telefono} : {respuesta}")
+
+            # Le prospect vient de répondre : on repositionne la relance.
+            # Qualifié → on arrête les relances ; sinon → nouvelle relance dans 30 min.
+            lead = await obtener_lead(msg.telefono)
+            if lead and lead.get("completo"):
+                await cancelar_seguimiento(msg.telefono)
+            else:
+                proxima = datetime.utcnow() + timedelta(minutes=RELANCE_1_MINUTES)
+                await programar_seguimiento(msg.telefono, proxima, etapa=0)
 
         return {"status": "ok"}
 

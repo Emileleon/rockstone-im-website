@@ -52,6 +52,22 @@ uvicorn agent.main:app --reload --port 8000
 > valide. `WHATSAPP_PROVIDER` n'est requis que pour lancer le serveur webhook
 > (`main.py`), pas pour le chat de test.
 
+## Qualification des prospects & relances
+
+- **Qualification** : Louise fait parler le prospect (une question à la fois) et
+  enregistre au fil de l'eau ses données via l'outil `guardar_calificacion` →
+  table `leads` (nom, gestion/transaction, opération, bien, budget, secteur, délai,
+  objet détaillé). Un lead est marqué « complet » dès que l'essentiel est connu.
+- **Relances proactives** : si le prospect ne répond plus, Louise le relance après
+  `RELANCE_1_MINUTES` (30 min par défaut), puis après `RELANCE_2_HORAS` (le lendemain).
+  Chaque réponse du prospect réinitialise le compteur ; une qualification complète
+  arrête les relances. Réglages dans `.env`.
+
+> ⚠️ **Fenêtre 24 h WhatsApp** : Meta/Twilio n'autorisent l'envoi libre que dans les
+> 24 h suivant le dernier message du prospect. La relance à 30 min passe ; la relance
+> « du lendemain » peut tomber hors fenêtre → en production, elle nécessite un
+> **template pré-approuvé** par le fournisseur. Sinon l'envoi échoue (c'est journalisé).
+
 ## Personnalisation
 
 - **Ton / identité de l'agent** → `config/prompts.yaml`

@@ -60,7 +60,7 @@ async def main():
 
         # Générer la réponse
         print("\nAgent : ", end="", flush=True)
-        respuesta = await generar_respuesta(mensaje, historial)
+        respuesta = await generar_respuesta(mensaje, historial, TELEFONO_TEST)
         print(respuesta)
         print()
 
