@@ -1,0 +1,4 @@
+# ScrapeGraphAI skill dependencies
+# Install: pip install -r requirements.txt && playwright install chromium
+scrapegraphai>=1.0.0
+playwright>=1.40.0
